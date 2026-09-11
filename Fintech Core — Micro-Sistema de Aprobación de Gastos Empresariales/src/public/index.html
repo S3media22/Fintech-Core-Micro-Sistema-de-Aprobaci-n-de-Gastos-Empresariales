@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Registro y aprobación de gastos empresariales con conversión de dólares a pesos." />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Aprobación de gastos | Fintech Core</title>
+    <link rel="icon" href="data:," />
+    <link rel="preload" href="/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <!-- Sin scripts en línea: la CSP solo permite archivos propios del servidor.
+         "defer" ejecuta en orden: primero window.Validators, luego main.js -->
+    <script src="/js/validators.js" defer></script>
+    <script src="/js/main.js" defer></script>
+  </head>
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
+
+    <!-- ============================================================ -->
+    <!-- VISTA: ACCESO (login, registro y verificación 2FA)           -->
+    <!-- ============================================================ -->
+    <div id="vista-acceso" class="acceso" hidden>
+      <section class="acceso__marca" aria-labelledby="titulo-acceso">
+        <p class="marca">Fintech Core</p>
+        <h1 id="titulo-acceso" class="acceso__titulo">Reporta el gasto. Recibe el sello.</h1>
+        <p class="acceso__bajada">
+          Registra tus gastos en dólares, conviértelos a pesos con la tasa del día y sigue su aprobación sin cadenas
+          de correos.
+        </p>
+
+        <figure class="muestra" aria-label="Ejemplo de un gasto aprobado">
+          <dl class="muestra__datos">
+            <div><dt>Gasto</dt><dd>Taxi al aeropuerto El Dorado</dd></div>
+            <div><dt>Monto</dt><dd class="cifra">US$ 38,00</dd></div>
+            <div><dt>Tasa aplicada</dt><dd class="cifra">4.012,50</dd></div>
+            <div><dt>Total en pesos</dt><dd class="cifra">$ 152.475,00</dd></div>
+          </dl>
+          <span class="sello sello--aprobado sello--grande">Aprobado</span>
+        </figure>
+      </section>
+
+      <main class="acceso__panel" id="contenido-acceso">
+        <!-- Login -->
+        <section data-panel="login" aria-labelledby="t-login" hidden>
+          <h2 id="t-login" class="panel__titulo">Inicia sesión</h2>
+          <form id="form-login" class="formulario" novalidate>
+            <div class="campo">
+              <label for="login-email">Correo de trabajo</label>
+              <input id="login-email" name="email" type="email" autocomplete="username" maxlength="254" required />
+              <p class="campo__error" id="login-email-error"></p>
+            </div>
+            <div class="campo">
+              <label for="login-password">Contraseña</label>
+              <input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="128" required />
+              <p class="campo__error" id="login-password-error"></p>
+            </div>
+            <p class="formulario__error" data-rol="error-general" role="alert"></p>
+            <button class="btn btn--primario" type="submit">Iniciar sesión</button>
+          </form>
+
+          <div class="oauth" id="oauth" hidden>
+            <p class="oauth__separador">o usa tu cuenta de</p>
+            <div class="oauth__botones">
+              <a class="btn btn--secundario" id="oauth-google" href="/api/auth/google" hidden>Google</a>
+              <a class="btn btn--secundario" id="oauth-github" href="/api/auth/github" hidden>GitHub</a>
+            </div>
+          </div>
+
+          <p class="panel__pie">¿Aún no tienes cuenta? <a href="#registro">Crea una</a></p>
+        </section>
+
+        <!-- Registro -->
+        <section data-panel="registro" aria-labelledby="t-registro" hidden>
+          <h2 id="t-registro" class="panel__titulo">Crea tu cuenta</h2>
+          <form id="form-registro" class="formulario" novalidate>
+            <div class="campo">
+              <label for="reg-nombre">Nombre completo</label>
+              <input id="reg-nombre" name="nombre" type="text" autocomplete="name" maxlength="80" required />
+              <p class="campo__error" id="reg-nombre-error"></p>
+            </div>
+            <div class="campo">
+              <label for="reg-email">Correo de trabajo</label>
+              <input id="reg-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+              <p class="campo__error" id="reg-email-error"></p>
+            </div>
+            <div class="campo">
+              <label for="reg-password">Contraseña</label>
+              <input id="reg-password" name="password" type="password" autocomplete="new-password" maxlength="72" required aria-describedby="reg-password-ayuda" />
+              <p class="campo__ayuda" id="reg-password-ayuda">De 8 a 72 caracteres, con mayúscula, minúscula, número y símbolo.</p>
+              <p class="campo__error" id="reg-password-error"></p>
+            </div>
+            <div class="campo">
+              <label for="reg-password-confirm">Repite la contraseña</label>
+              <input id="reg-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" maxlength="72" required />
+              <p class="campo__error" id="reg-password-confirm-error"></p>
+            </div>
+            <p class="formulario__error" data-rol="error-general" role="alert"></p>
+            <button class="btn btn--primario" type="submit">Crear cuenta</button>
+          </form>
+          <p class="panel__pie">¿Ya tienes cuenta? <a href="#login">Inicia sesión</a></p>
+        </section>
+
+        <!-- Segundo factor durante el login -->
+        <section data-panel="verificar" aria-labelledby="t-verificar" hidden>
+          <h2 id="t-verificar" class="panel__titulo">Confirma que eres tú</h2>
+          <p class="panel__texto">Abre Google Authenticator (o tu app de autenticación) y escribe el código de 6 dígitos de Fintech Core.</p>
+          <form id="form-verificar" class="formulario" novalidate>
+            <div class="campo">
+              <label for="verificar-code">Código de verificación</label>
+              <input id="verificar-code" name="code" class="input-codigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required />
+              <p class="campo__error" id="verificar-code-error"></p>
+            </div>
+            <p class="formulario__error" data-rol="error-general" role="alert"></p>
+            <button class="btn btn--primario" type="submit">Verificar y entrar</button>
+          </form>
+          <p class="panel__pie"><a href="#login">Volver al inicio de sesión</a></p>
+        </section>
+      </main>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- VISTA: PANEL (usuario autenticado)                           -->
+    <!-- ============================================================ -->
+    <div id="vista-panel" class="panel" hidden>
+      <header class="barra">
+        <p class="marca">Fintech Core</p>
+
+        <p class="barra__tasa" id="tasa" aria-live="polite">
+          <span class="barra__tasa-etiqueta">Tasa del día</span>
+          <span class="cifra" id="tasa-valor">Consultando…</span>
+          <span class="barra__tasa-fuente" id="tasa-fuente"></span>
+        </p>
+
+        <div class="barra__usuario">
+          <p class="barra__nombre"><span id="usuario-nombre"></span> <span class="barra__rol" id="usuario-rol"></span></p>
+          <button class="btn btn--texto" id="btn-salir" type="button">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <nav class="pestanas" aria-label="Secciones">
+        <div role="tablist">
+          <button role="tab" id="pestana-panel" aria-controls="seccion-gastos" data-ruta="panel" type="button">Mis gastos</button>
+          <button role="tab" id="pestana-aprobaciones" aria-controls="seccion-aprobaciones" data-ruta="aprobaciones" type="button" hidden>
+            Por aprobar <span class="contador" id="contador-pendientes" hidden></span>
+          </button>
+          <button role="tab" id="pestana-seguridad" aria-controls="seccion-seguridad" data-ruta="seguridad" type="button">Seguridad</button>
+        </div>
+      </nav>
+
+      <main id="contenido" class="panel__contenido" tabindex="-1">
+        <!-- Mis gastos -->
+        <section id="seccion-gastos" role="tabpanel" aria-labelledby="pestana-panel" class="gastos" hidden>
+          <section class="comprobante" aria-labelledby="t-nuevo-gasto">
+            <h2 id="t-nuevo-gasto" class="seccion__titulo">Nuevo gasto</h2>
+            <form id="form-gasto" class="formulario" novalidate>
+              <div class="campo">
+                <label for="gasto-descripcion">Descripción</label>
+                <input id="gasto-descripcion" name="descripcion" type="text" maxlength="100" placeholder="Ej.: Almuerzo con cliente en Medellín" required />
+                <p class="campo__error" id="gasto-descripcion-error"></p>
+              </div>
+              <div class="campo">
+                <label for="gasto-categoria">Categoría</label>
+                <select id="gasto-categoria" name="categoria" required>
+                  <option value="">Selecciona una categoría</option>
+                  <option value="transporte">Transporte</option>
+                  <option value="alimentacion">Alimentación</option>
+                  <option value="hospedaje">Hospedaje</option>
+                  <option value="software">Software y licencias</option>
+                  <option value="equipos">Equipos</option>
+                  <option value="otros">Otros</option>
+                </select>
+                <p class="campo__error" id="gasto-categoria-error"></p>
+              </div>
+              <div class="comprobante__fila">
+                <div class="campo">
+                  <label for="gasto-monto">Monto en dólares</label>
+                  <div class="input-prefijo">
+                    <span aria-hidden="true">US$</span>
+                    <input id="gasto-monto" name="montoEnUSD" type="text" inputmode="decimal" maxlength="9" placeholder="0.00" required />
+                  </div>
+                  <p class="campo__error" id="gasto-monto-error"></p>
+                </div>
+                <div class="campo">
+                  <label for="gasto-fecha">Fecha del gasto</label>
+                  <input id="gasto-fecha" name="fechaGasto" type="date" required />
+                  <p class="campo__error" id="gasto-fecha-error"></p>
+                </div>
+              </div>
+
+              <p class="comprobante__conversion" id="conversion" aria-live="polite">
+                Escribe el monto para ver el valor aproximado en pesos.
+              </p>
+
+              <p class="formulario__error" data-rol="error-general" role="alert"></p>
+              <button class="btn btn--primario" type="submit">Enviar a aprobación</button>
+            </form>
+          </section>
+
+          <section class="libro" aria-labelledby="t-libro">
+            <div class="libro__cabecera">
+              <h2 id="t-libro" class="seccion__titulo">Mis gastos</h2>
+              <div class="filtros" role="group" aria-label="Filtrar por estado">
+                <button type="button" class="filtro" data-estado="" aria-pressed="true">Todos</button>
+                <button type="button" class="filtro" data-estado="aprobado" aria-pressed="false">Aprobados</button>
+                <button type="button" class="filtro" data-estado="pendiente" aria-pressed="false">Pendientes</button>
+                <button type="button" class="filtro" data-estado="rechazado" aria-pressed="false">Rechazados</button>
+              </div>
+            </div>
+
+            <table class="tabla">
+              <caption class="solo-lectores">Listado de tus gastos con su estado de aprobación</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Descripción</th>
+                  <th scope="col" class="num">Dólares</th>
+                  <th scope="col" class="num">Pesos</th>
+                  <th scope="col">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-gastos"></tbody>
+            </table>
+            <p class="vacio" id="gastos-vacio" hidden></p>
+
+            <dl class="totales" id="totales" aria-label="Totales por estado"></dl>
+          </section>
+        </section>
+
+        <!-- Bandeja del aprobador -->
+        <section id="seccion-aprobaciones" role="tabpanel" aria-labelledby="pestana-aprobaciones" class="aprobaciones" hidden>
+          <h2 class="seccion__titulo">Por aprobar</h2>
+          <p class="seccion__texto">Gastos de tu equipo esperando una decisión. Los tuyos los revisa otra persona.</p>
+          <ul class="pendientes" id="lista-pendientes"></ul>
+          <p class="vacio" id="pendientes-vacio" hidden>No hay gastos esperando tu decisión.</p>
+        </section>
+
+        <!-- Seguridad y 2FA -->
+        <section id="seccion-seguridad" role="tabpanel" aria-labelledby="pestana-seguridad" class="seguridad" hidden>
+          <h2 class="seccion__titulo">Seguridad de la cuenta</h2>
+
+          <section class="bloque" aria-labelledby="t-2fa">
+            <div class="bloque__cabecera">
+              <h3 id="t-2fa">Verificación en dos pasos</h3>
+              <span class="sello" id="estado-2fa"></span>
+            </div>
+
+            <div id="dospasos-inactivo" hidden>
+              <p class="seccion__texto">
+                Además de tu contraseña, te pediremos un código de tu teléfono al entrar. Así nadie accede a tus gastos
+                aunque conozca tu contraseña.
+              </p>
+              <button class="btn btn--primario" id="btn-2fa-configurar" type="button">Configurar verificación en dos pasos</button>
+            </div>
+
+            <div id="dospasos-configurar" class="configurar" hidden>
+              <ol class="pasos">
+                <li>
+                  <p>Escanea este código con Google Authenticator u otra app de autenticación.</p>
+                  <img id="qr-2fa" class="qr" width="232" height="232" alt="Código QR para agregar Fintech Core a tu app de autenticación" />
+                  <p class="campo__ayuda">¿No puedes escanearlo? Escribe esta clave en la app: <code id="clave-manual" class="clave"></code></p>
+                </li>
+                <li>
+                  <form id="form-2fa-activar" class="formulario" novalidate>
+                    <div class="campo">
+                      <label for="activar-code">Escribe el código de 6 dígitos que muestra la app</label>
+                      <input id="activar-code" name="code" class="input-codigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required />
+                      <p class="campo__error" id="activar-code-error"></p>
+                    </div>
+                    <p class="formulario__error" data-rol="error-general" role="alert"></p>
+                    <div class="acciones">
+                      <button class="btn btn--primario" type="submit">Activar verificación</button>
+                      <button class="btn btn--texto" id="btn-2fa-cancelar" type="button">Cancelar</button>
+                    </div>
+                  </form>
+                </li>
+              </ol>
+            </div>
+
+            <div id="dospasos-activo" hidden>
+              <p class="seccion__texto">Tu cuenta pide un código de tu app cada vez que inicias sesión. Para desactivarlo, confirma con un código actual.</p>
+              <form id="form-2fa-desactivar" class="formulario formulario--linea" novalidate>
+                <div class="campo">
+                  <label for="desactivar-code">Código de 6 dígitos</label>
+                  <input id="desactivar-code" name="code" class="input-codigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required />
+                  <p class="campo__error" id="desactivar-code-error"></p>
+                </div>
+                <p class="formulario__error" data-rol="error-general" role="alert"></p>
+                <button class="btn btn--peligro" type="submit">Desactivar verificación</button>
+              </form>
+            </div>
+          </section>
+
+          <section class="bloque" aria-labelledby="t-cuentas">
+            <h3 id="t-cuentas">Formas de iniciar sesión</h3>
+            <dl class="cuentas" id="cuentas"></dl>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PLANTILLAS DE COMPONENTES (se clonan y rellenan con textContent) -->
+    <!-- ============================================================ -->
+    <template id="tpl-fila-gasto">
+      <tr class="tabla__fila">
+        <td data-etiqueta="Fecha" data-campo="fecha" class="cifra"></td>
+        <td data-etiqueta="Descripción">
+          <span class="tabla__desc" data-campo="descripcion"></span>
+          <span class="tabla__detalle" data-campo="detalle"></span>
+        </td>
+        <td data-etiqueta="Dólares" data-campo="usd" class="num cifra"></td>
+        <td data-etiqueta="Pesos" data-campo="cop" class="num cifra"></td>
+        <td data-etiqueta="Estado"><span class="sello" data-campo="estado"></span></td>
+      </tr>
+    </template>
+
+    <template id="tpl-pendiente">
+      <li class="pendiente">
+        <div class="pendiente__datos">
+          <p class="pendiente__desc" data-campo="descripcion"></p>
+          <p class="pendiente__meta" data-campo="meta"></p>
+        </div>
+        <p class="pendiente__monto">
+          <span class="cifra pendiente__usd" data-campo="usd"></span>
+          <span class="cifra pendiente__cop" data-campo="cop"></span>
+        </p>
+        <form class="pendiente__decision" novalidate>
+          <div class="campo">
+            <label data-campo="label-comentario">Comentario (obligatorio si rechazas)</label>
+            <input name="comentario" type="text" maxlength="100" data-campo="input-comentario" />
+            <p class="campo__error" data-campo="error-comentario"></p>
+          </div>
+          <div class="acciones">
+            <button class="btn btn--aprobar" type="submit" value="aprobado">Aprobar</button>
+            <button class="btn btn--rechazar" type="submit" value="rechazado">Rechazar</button>
+          </div>
+        </form>
+        <span class="sello sello--grande pendiente__sello" data-campo="sello" hidden></span>
+      </li>
+    </template>
+  </body>
+</html>
